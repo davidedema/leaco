@@ -17,7 +17,7 @@ LINE_WIDTH = 60
 ### TODO ###
 ### First set of trajectories (step length = 0.15): "romeo_walking_traj015.npz" ###
 ### Second set of trajectories (step length = 0.30): "romeo_walking_traj030.npz" ###
-DATA_FILE_TSID = "romeo_walking_traj015.npz"
+DATA_FILE_TSID = "romeo_walking_traj030.npz"
 
 DATA_FILE_LIPM = "romeo_walking_traj_lipm.npz"
 
@@ -71,12 +71,34 @@ T_pre = 1.5  # simulation time before starting to walk
 T_post = 1.5  # simulation time after walking
 
 ### TODO ###
+# w_com = 2e3  # weight of center of mass task
+# w_cop = 0.0  # weight of center of pressure task
+# w_am = 1e-1  # weight of angular momentum task
+# w_foot = 1e3  # weight of the foot motion task
+# w_contact = 1e3  # weight of the foot in contact
+# w_posture = 5e1  # weight of joint posture task
+# w_forceRef = 1e-5  # weight of force regularization task
+# w_torque_bounds = 1.0  # weight of the torque bounds
+# w_joint_bounds = 1.0
+
+
+# w_com = 2e3  # weight of center of mass task
+# w_cop = 0.0  # weight of center of pressure task
+# w_am = 1e-1  # weight of angular momentum task
+# w_foot = 1e3  # weight of the foot motion task
+# w_contact = 1e3  # weight of the foot in contact
+# w_posture = 5e1  # weight of joint posture task
+# w_forceRef = 1e-5  # weight of force regularization task
+# w_torque_bounds = 1.0  # weight of the torque bounds
+# w_joint_bounds = 1.0
+
+
 w_com = 1.0  # weight of center of mass task
 w_cop = 0.0  # weight of center of pressure task
-w_am = 1e-6  # weight of angular momentum task
+w_am = 5e-4  # weight of angular momentum task
 w_foot = 1e0  # weight of the foot motion task
 w_contact = 1e2  # weight of the foot in contact
-w_posture = 0  # weight of joint posture task
+w_posture = 1e-3  # weight of joint posture task
 w_forceRef = 1e-5  # weight of force regularization task
 w_torque_bounds = 1.0  # weight of the torque bounds
 w_joint_bounds = 1.0

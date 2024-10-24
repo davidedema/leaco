@@ -27,7 +27,7 @@ com_acc_des = np.empty((3, N)) * nan # acc_des = acc_ref - Kp*pos_err - Kd*vel_e
 
 offset = tsid.robot.com(tsid.formulation.data())
 amp = np.array([0., 0.05, 0.])
-f   = np.array([0., 0.5, 0.])
+f   = np.array([0., 1.0, 0.])
 two_pi_f = 2 * np.pi * f
 two_pi_f_amp = two_pi_f * amp
 two_pi_f_squared_amp = two_pi_f * two_pi_f_amp
@@ -102,31 +102,37 @@ for i in range(0, N):
 # PLOT STUFF
 time = np.arange(0.0, N * conf.dt, conf.dt)
 
+dictpos = {
+    0 : "x",
+    1 : "y",
+    2 : "z"
+}
+
 (f, ax) = plut.create_empty_figure(3, 1)
 for i in range(3):
-    ax[i].plot(time, com_pos[i, :], label="CoM " + str(i))
-    ax[i].plot(time, com_pos_ref[i, :], "r:", label="CoM Ref " + str(i))
+    ax[i].plot(time, com_pos[i, :], label="CoM " + dictpos[i])
+    ax[i].plot(time, com_pos_ref[i, :], "r:", label="CoM Ref " + dictpos[i])
     ax[i].set_xlabel("Time [s]")
-    ax[i].set_ylabel("CoM [m]")
+    ax[i].set_ylabel("CoM " + dictpos[i] + " [m]")
     leg = ax[i].legend()
     leg.get_frame().set_alpha(0.5)
 
 (f, ax) = plut.create_empty_figure(3, 1)
 for i in range(3):
-    ax[i].plot(time, com_vel[i, :], label="CoM Vel " + str(i))
-    ax[i].plot(time, com_vel_ref[i, :], "r:", label="CoM Vel Ref " + str(i))
+    ax[i].plot(time, com_vel[i, :], label="CoM Vel " + dictpos[i])
+    ax[i].plot(time, com_vel_ref[i, :], "r:", label="CoM Vel Ref " + dictpos[i])
     ax[i].set_xlabel("Time [s]")
-    ax[i].set_ylabel("CoM Vel [m/s]")
+    ax[i].set_ylabel("CoM Vel " + dictpos[i] + " [m/s]")
     leg = ax[i].legend()
     leg.get_frame().set_alpha(0.5)
 
 (f, ax) = plut.create_empty_figure(3, 1)
 for i in range(3):
-    ax[i].plot(time, com_acc[i, :], label="CoM Acc " + str(i))
-    ax[i].plot(time, com_acc_ref[i, :], "r:", label="CoM Acc Ref " + str(i))
-    ax[i].plot(time, com_acc_des[i, :], "g--", label="CoM Acc Des " + str(i))
+    ax[i].plot(time, com_acc[i, :], label="CoM Acc " + dictpos[i])
+    ax[i].plot(time, com_acc_ref[i, :], "r:", label="CoM Acc Ref " + dictpos[i])
+    ax[i].plot(time, com_acc_des[i, :], "g--", label="CoM Acc Des " + dictpos[i])
     ax[i].set_xlabel("Time [s]")
-    ax[i].set_ylabel("CoM Acc [m/s^2]")
+    ax[i].set_ylabel("CoM Acc " + dictpos[i] + " [m/s^2]")
     leg = ax[i].legend()
     leg.get_frame().set_alpha(0.5)
 

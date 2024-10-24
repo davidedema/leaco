@@ -219,11 +219,17 @@ while True:
 # PLOT STUFF
 time = np.arange(0.0, (N + N_post) * conf.dt, conf.dt)
 
+dictpos = {
+    0 : "x",
+    1 : "y",
+    2 : "z"
+}
+
 if PLOT_COM:
     (f, ax) = plut.create_empty_figure(3, 1)
     for i in range(3):
-        ax[i].plot(time, com_pos[i, :], label="CoM " + str(i))
-        ax[i].plot(time[:N], com_pos_ref[i, :], "r:", label="CoM Ref " + str(i))
+        ax[i].plot(time, com_pos[i, :], label="CoM " + dictpos[i])
+        ax[i].plot(time[:N], com_pos_ref[i, :], "r:", label="CoM Ref " + dictpos[i])
         ax[i].set_xlabel("Time [s]")
         ax[i].set_ylabel("CoM [m]")
         leg = ax[i].legend()
@@ -231,8 +237,8 @@ if PLOT_COM:
 
     (f, ax) = plut.create_empty_figure(3, 1)
     for i in range(3):
-        ax[i].plot(time, com_vel[i, :], label="CoM Vel " + str(i))
-        ax[i].plot(time[:N], com_vel_ref[i, :], "r:", label="CoM Vel Ref " + str(i))
+        ax[i].plot(time, com_vel[i, :], label="CoM Vel " + dictpos[i])
+        ax[i].plot(time[:N], com_vel_ref[i, :], "r:", label="CoM Vel Ref " + dictpos[i])
         ax[i].set_xlabel("Time [s]")
         ax[i].set_ylabel("CoM Vel [m/s]")
         leg = ax[i].legend()
@@ -240,9 +246,9 @@ if PLOT_COM:
 
     (f, ax) = plut.create_empty_figure(3, 1)
     for i in range(3):
-        ax[i].plot(time, com_acc[i, :], label="CoM Acc " + str(i))
-        ax[i].plot(time[:N], com_acc_ref[i, :], "r:", label="CoM Acc Ref " + str(i))
-        ax[i].plot(time, com_acc_des[i, :], "g--", label="CoM Acc Des " + str(i))
+        ax[i].plot(time, com_acc[i, :], label="CoM Acc " + dictpos[i])
+        ax[i].plot(time[:N], com_acc_ref[i, :], "r:", label="CoM Acc Ref " + dictpos[i])
+        ax[i].plot(time, com_acc_des[i, :], "g--", label="CoM Acc Des " + dictpos[i])
         ax[i].set_xlabel("Time [s]")
         ax[i].set_ylabel("CoM Acc [m/s^2]")
         leg = ax[i].legend()
@@ -251,34 +257,34 @@ if PLOT_COM:
 if PLOT_COP:
     (f, ax) = plut.create_empty_figure(2, 1)
     for i in range(2):
-        ax[i].plot(time, cop_LF[i, :], label="CoP LF " + str(i))
-        ax[i].plot(time, cop_RF[i, :], label="CoP RF " + str(i))
-        #        ax[i].plot(time[:N], cop_ref[i,:], label='CoP ref '+str(i))
+        ax[i].plot(time, cop_LF[i, :], label="CoP LF " + dictpos[i])
+        ax[i].plot(time, cop_RF[i, :], label="CoP RF " + dictpos[i])
+        #        ax[i].plot(time[:N], cop_ref[i,:], label='CoP ref '+dictpos[i])
         if i == 0:
             ax[i].plot(
                 [time[0], time[-1]],
                 [-conf.lxn, -conf.lxn],
                 ":",
-                label="CoP Lim " + str(i),
+                label="CoP Lim " + dictpos[i],
             )
             ax[i].plot(
                 [time[0], time[-1]],
                 [conf.lxp, conf.lxp],
                 ":",
-                label="CoP Lim " + str(i),
+                label="CoP Lim " + dictpos[i],
             )
         elif i == 1:
             ax[i].plot(
                 [time[0], time[-1]],
                 [-conf.lyn, -conf.lyn],
                 ":",
-                label="CoP Lim " + str(i),
+                label="CoP Lim " + dictpos[i],
             )
             ax[i].plot(
                 [time[0], time[-1]],
                 [conf.lyp, conf.lyp],
                 ":",
-                label="CoP Lim " + str(i),
+                label="CoP Lim " + dictpos[i],
             )
         ax[i].set_xlabel("Time [s]")
         ax[i].set_ylabel("CoP [m]")
@@ -289,8 +295,8 @@ if PLOT_COP:
 # (f, ax) = plut.create_empty_figure(3,2)
 # ax = ax.reshape((6))
 # for i in range(6):
-#    ax[i].plot(time, f_LF[i,:], label='Force LF '+str(i))
-#    ax[i].plot(time, f_RF[i,:], label='Force RF '+str(i))
+#    ax[i].plot(time, f_LF[i,:], label='Force LF '+dictpos[i])
+#    ax[i].plot(time, f_RF[i,:], label='Force RF '+dictpos[i])
 #    ax[i].set_xlabel('Time [s]')
 #    ax[i].set_ylabel('Force [N/Nm]')
 #    leg = ax[i].legend()
@@ -299,28 +305,28 @@ if PLOT_COP:
 if PLOT_FOOT_TRAJ:
     for i in range(3):
         plt.figure()
-        plt.plot(time, x_RF[i, :], label="x RF " + str(i))
-        plt.plot(time[:N], x_RF_ref[i, :], ":", label="x RF ref " + str(i))
-        plt.plot(time, x_LF[i, :], label="x LF " + str(i))
-        plt.plot(time[:N], x_LF_ref[i, :], ":", label="x LF ref " + str(i))
+        plt.plot(time, x_RF[i, :], label="x RF " + dictpos[i])
+        plt.plot(time[:N], x_RF_ref[i, :], ":", label="x RF ref " + dictpos[i])
+        plt.plot(time, x_LF[i, :], label="x LF " + dictpos[i])
+        plt.plot(time[:N], x_LF_ref[i, :], ":", label="x LF ref " + dictpos[i])
         plt.legend()
 
     # for i in range(3):
     #    plt.figure()
-    #    plt.plot(time, dx_RF[i,:], label='dx RF '+str(i))
-    #    plt.plot(time[:N], dx_RF_ref[i,:], ':', label='dx RF ref '+str(i))
-    #    plt.plot(time, dx_LF[i,:], label='dx LF '+str(i))
-    #    plt.plot(time[:N], dx_LF_ref[i,:], ':', label='dx LF ref '+str(i))
+    #    plt.plot(time, dx_RF[i,:], label='dx RF '+dictpos[i])
+    #    plt.plot(time[:N], dx_RF_ref[i,:], ':', label='dx RF ref '+dictpos[i])
+    #    plt.plot(time, dx_LF[i,:], label='dx LF '+dictpos[i])
+    #    plt.plot(time[:N], dx_LF_ref[i,:], ':', label='dx LF ref '+dictpos[i])
     #    plt.legend()
     #
     # for i in range(3):
     #    plt.figure()
-    #    plt.plot(time, ddx_RF[i,:], label='ddx RF '+str(i))
-    #    plt.plot(time[:N], ddx_RF_ref[i,:], ':', label='ddx RF ref '+str(i))
-    #    plt.plot(time, ddx_RF_des[i,:], '--', label='ddx RF des '+str(i))
-    #    plt.plot(time, ddx_LF[i,:], label='ddx LF '+str(i))
-    #    plt.plot(time[:N], ddx_LF_ref[i,:], ':', label='ddx LF ref '+str(i))
-    #    plt.plot(time, ddx_LF_des[i,:], '--', label='ddx LF des '+str(i))
+    #    plt.plot(time, ddx_RF[i,:], label='ddx RF '+dictpos[i])
+    #    plt.plot(time[:N], ddx_RF_ref[i,:], ':', label='ddx RF ref '+dictpos[i])
+    #    plt.plot(time, ddx_RF_des[i,:], '--', label='ddx RF des '+dictpos[i])
+    #    plt.plot(time, ddx_LF[i,:], label='ddx LF '+dictpos[i])
+    #    plt.plot(time[:N], ddx_LF_ref[i,:], ':', label='ddx LF ref '+dictpos[i])
+    #    plt.plot(time, ddx_LF_des[i,:], '--', label='ddx LF des '+dictpos[i])
     #    plt.legend()
 
 if PLOT_TORQUES:
