@@ -128,6 +128,6 @@ while not done:
         done = True
 
 progress_bar.close()
-name = 'dataset_' + str(N) + '.csv'
+name = 'dataset_N' + str(N) + '.csv'
 df.to_csv(name, index=False)    
         
