@@ -1,3 +1,3 @@
-from dataset import main
+from dataset import test
 
-main()
+test()
