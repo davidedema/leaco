@@ -1,11 +1,9 @@
 import torch.nn as nn
-import torch
 
 class NeuralNet(nn.Module):
 
-    def __init__(self, in_size, hid_size, out_size, hasDropout=False):
+    def __init__(self, in_size, hid_size, out_size):
         super(NeuralNet, self).__init__()
-        self.hasDropout = hasDropout
         
         self.linear_stack = nn.Sequential(
           nn.Linear(in_size, hid_size),
@@ -13,8 +11,10 @@ class NeuralNet(nn.Module):
           nn.Linear(hid_size, hid_size),
           nn.GELU(),
           nn.Linear(hid_size, out_size),
-          nn.GELU()
+          nn.Sigmoid()
         )
+        
+        self.initialize_weights()
         
     def forward(self, x):
         out = self.linear_stack(x)
