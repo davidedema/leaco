@@ -25,8 +25,8 @@ done = False
 num_negative = 0
 num_positive = 0
 
-TOT_NEG = 300
-TOT_POS = 200
+TOT_NEG = 550
+TOT_POS = 450
 
 df = pd.DataFrame(columns=['Q0_1', 'Q0_2', 'Q0_3', 'Q0_4', 'Q0_5', 'Q0_6','DQ0_1', 'DQ0_2', 'DQ0_3', 'DQ0_4', 'DQ0_5', 'DQ0_6', 'Label'])
 

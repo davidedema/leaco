@@ -1,4 +1,9 @@
 tqdm
-torch
 pandas==2.0.3
+torch>=2.0 --index-url https://download.pytorch.org/whl/cpu
 scikit-learn
+setuptools==68
+scikit-build>=0.17
+cmake>=3.27
+ninja>=1.11
+l4casadi --no-build-isolation
