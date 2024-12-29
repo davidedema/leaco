@@ -3,7 +3,7 @@ import torch
 
 class NeuralNet(nn.Module):
 
-    def __init__(self, in_size, hid_size, out_size):
+    def __init__(self, in_size=12, hid_size=64, out_size=1):
         super(NeuralNet, self).__init__()
         
         self.linear_stack = nn.Sequential(
@@ -30,19 +30,24 @@ class NeuralNet(nn.Module):
     def create_casadi_function(self, robot_name, NN_DIR, input_size, load_weights):
         from casadi import MX, Function
         import l4casadi as l4c
+        import torch
 
-        # if load_weights is True, we load the neural-network weights from a ".pt" file
-        if(load_weights):
+        # Load neural-network weights from a ".pt" file if requested
+        if load_weights:
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
             nn_name = f'{NN_DIR}model.pt'
-            nn_data = torch.load(nn_name, map_location=device)
-            self.load_state_dict(nn_data['model'])
+            self.load_state_dict(torch.load(nn_name, map_location=device))
 
-        state = MX.sym("x", input_size)        
+        # Define the input symbol for CasADi
+        state = MX.sym("x", input_size).T  # CasADi symbolic variable with `input_size` elements
+
         self.l4c_model = l4c.L4CasADi(self,
-                                      device='cuda' if torch.cuda.is_available() else 'cpu',
-                                      name=f'{robot_name}_model',
-                                      build_dir=f'{NN_DIR}nn_{robot_name}')
+                                    device='cuda' if torch.cuda.is_available() else 'cpu',
+                                    name=f'{robot_name}_model',
+                                    build_dir=f'{NN_DIR}nn_{robot_name}')
+        
+        
         self.nn_model = self.l4c_model(state)
-        # This is the function that you can use in a casadi problem
+        
+        # Define the CasADi function for the neural network
         self.nn_func = Function('nn_func', [state], [self.nn_model])

@@ -79,7 +79,7 @@ kfold = StratifiedKFold(n_splits=10, shuffle=True)
 cv_scores = []
 for train, test in kfold.split(X, y):
     # create model, train, and get accuracy
-    model = NeuralNet(12, 64, 1)
+    model = NeuralNet()
     acc = model_train(model, X[train], y[train], X[test], y[test])
     print("Accuracy (wide): %.2f" % acc)
     cv_scores.append(acc)
