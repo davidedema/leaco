@@ -40,13 +40,10 @@ class NeuralNet(nn.Module):
 
         # Define the input symbol for CasADi
         state = MX.sym("x", input_size).T  # CasADi symbolic variable with `input_size` elements
-
         self.l4c_model = l4c.L4CasADi(self,
                                     device='cuda' if torch.cuda.is_available() else 'cpu',
                                     name=f'{robot_name}_model',
                                     build_dir=f'{NN_DIR}nn_{robot_name}')
-        
-        
         self.nn_model = self.l4c_model(state)
         
         # Define the CasADi function for the neural network

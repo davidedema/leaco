@@ -11,7 +11,7 @@ import tqdm
 from model import NeuralNet
 
 
-DATASET_NAME = "/home/student/shared/orc_project/ur5/datasets/dataset_N4_1000.csv"
+DATASET_NAME = "/home/student/shared/orc_project/ur5/datasets/dataset_N4_500.csv"
 
 def model_train(model, X_train, y_train, X_val, y_val):
     # loss function and optimizer
@@ -75,7 +75,7 @@ y = torch.tensor(y, dtype=torch.float32).reshape(-1, 1)
 
 # train-test split: Hold out the test set for final model evaluation
 # define 5-fold cross validation test harness
-kfold = StratifiedKFold(n_splits=10, shuffle=True)
+kfold = StratifiedKFold(n_splits=4, shuffle=True)
 cv_scores = []
 for train, test in kfold.split(X, y):
     # create model, train, and get accuracy

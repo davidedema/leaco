@@ -37,8 +37,8 @@ def main():
     SOLVER_TOLERANCE = 1e-4
     SOLVER_MAX_ITER = 3
     
-    N = int(N_sim/10)
-    CONTROL_BOUNDS_SCALING_FACTOR = 1.0
+    N = 25
+    CONTROL_BOUNDS_SCALING_FACTOR = 0.3
     USE_TERMINAL_CONSTRAINT = True
     w_v = 0
     w_final_v = 0
@@ -139,7 +139,7 @@ def main():
     cost += w_final_v * X[-1][nq:].T @ X[-1][nq:]
     
     if(USE_TERMINAL_CONSTRAINT):
-        opti.subject_to(net.nn_func(X[-1][:12]) >= 0.5)
+        opti.subject_to(net.nn_func(X[-1]) >= 0.7)
 
     opti.minimize(cost)
 
@@ -152,8 +152,11 @@ def main():
         "ipopt.compl_inf_tol": SOLVER_TOLERANCE,
         "print_time": 0,             
         "detect_simple_bounds": True,
-        "ipopt.max_iter": 1000
+        "ipopt.max_iter": 1000,
+        "ipopt.hessian_approximation": "limited-memory",        # without this parameter the l4casadi function not works
+        "ipopt.nlp_scaling_method": "gradient-based",
     }
+    
     opti.solver("ipopt", opts)
 
     # Solve the problem to convergence the first time
