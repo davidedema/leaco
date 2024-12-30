@@ -11,7 +11,7 @@ import tqdm
 import matplotlib.pyplot as plt
 from model import NeuralNet
 
-DATASET_NAME = "/home/student/shared/orc_project/ur5/datasets/dataset_N4_500.csv"
+DATASET_NAME = "/home/student/shared/orc_project/double_pendulum/datasets/dataset_N15_2000.csv"
 
 def model_train(model, X_train, y_train, X_val, y_val):
     # loss function and optimizer
@@ -69,8 +69,8 @@ def evaluate_model(model, X_test, y_test):
 
 data = pd.read_csv(DATASET_NAME)
 
-X = data.iloc[2:, :12]    # features   
-y = data.iloc[2:, 12]      # target
+X = data.iloc[2:, :4]    # features   
+y = data.iloc[2:, 4]      # target
 
 # Encoding the target
 encoder = LabelEncoder()
@@ -103,4 +103,4 @@ plt.title("Confusion Matrix")
 plt.show()
 
 # Save the model
-torch.save(model.state_dict(), "/home/student/shared/orc_project/ur5/models/model.pt")
+torch.save(model.state_dict(), "/home/student/shared/orc_project/double_pendulum/models/model.pt")

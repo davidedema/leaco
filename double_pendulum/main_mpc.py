@@ -7,7 +7,7 @@ from termcolor import colored
 
 import plot_utils as plut
 from example_robot_data.robots_loader import load, load_full
-import conf_ur5 as conf_ur5
+import orc_project.double_pendulum.conf_doublep as conf_doublep
 from robot_simulator import RobotSimulator
 from robot_wrapper import RobotWrapper 
 
@@ -19,11 +19,12 @@ def main():
     # parse the arguments
     N_sim = 100
     print("Load robot model")
-    robot, _, urdf, _ = load_full("ur5")
+    robot, _, urdf, _ = load_full("double_pendulum")
 
     print("Create KinDynComputations object")
     joints_name_list = [s for s in robot.model.names[1:]]   # skip the first name because it is "universe"
-    end_effector_frame_name = "wrist_3_link"
+    print(joints_name_list)
+    end_effector_frame_name = "link2"
     nq = len(joints_name_list)                              # number of joints
     nx = 2*nq                                               # size of the state variable
     kinDyn = KinDynComputations(urdf, joints_name_list)
@@ -31,7 +32,7 @@ def main():
     
     # create the neural network
     net = NeuralNet()
-    net.create_casadi_function("ur5", "/home/student/shared/orc_project/ur5/models/", 12, True)
+    net.create_casadi_function("ur5", "/home/student/shared/orc_project/double_pendulum/models/", 4, True)
 
     DO_WARM_START = True
     SOLVER_TOLERANCE = 1e-4
@@ -46,11 +47,12 @@ def main():
     SIMULATOR = "pinocchio"
     POS_BOUNDS_SCALING_FACTOR = 0.2
     VEL_BOUNDS_SCALING_FACTOR = 2.0 
-    qMin = POS_BOUNDS_SCALING_FACTOR * robot.model.lowerPositionLimit
-    qMax = POS_BOUNDS_SCALING_FACTOR * robot.model.upperPositionLimit
-    vMax = VEL_BOUNDS_SCALING_FACTOR * robot.model.velocityLimit
-    tauMin = -robot.model.effortLimit * CONTROL_BOUNDS_SCALING_FACTOR
-    tauMax = robot.model.effortLimit * CONTROL_BOUNDS_SCALING_FACTOR
+    qMin   = np.array([-np.pi,-np.pi])
+    qMax   = -qMin
+    vMax   = np.array([8.0,8.0])
+    vMin   = -vMax
+    tauMax = np.array([1.0, 1.0])
+    tauMin = -tauMax
 
     dt_sim = 0.002
 
@@ -67,7 +69,7 @@ def main():
     w_a = 1e-5          # acceleration weight
 
     r = RobotWrapper(robot.model, robot.collision_model, robot.visual_model)
-    simu = RobotSimulator(conf_ur5, r)
+    simu = RobotSimulator(conf_doublep, r)
     simu.init(q0, dq0)
     simu.display(q0)
         
