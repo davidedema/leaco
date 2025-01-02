@@ -24,11 +24,9 @@ def main():
     print("Create KinDynComputations object")
     joints_name_list = [s for s in robot.model.names[1:]]   # skip the first name because it is "universe"
     print(joints_name_list)
-    end_effector_frame_name = "link2"
     nq = len(joints_name_list)                              # number of joints
     nx = 2*nq                                               # size of the state variable
     kinDyn = KinDynComputations(urdf, joints_name_list)
-    forward_kinematics_ee = kinDyn.forward_kinematics_fun(end_effector_frame_name)
     
     # create the neural network
     net = NeuralNet()
@@ -38,15 +36,10 @@ def main():
     SOLVER_TOLERANCE = 1e-4
     SOLVER_MAX_ITER = 3
     
-    N = int(N_sim/10)    
-    CONTROL_BOUNDS_SCALING_FACTOR = 0.7
-    USE_TERMINAL_CONSTRAINT = True
-    w_v = 0
-    w_final_v = 0
+    N = int(N_sim/10)
+    USE_TERMINAL_CONSTRAINT = False
+    THRESHOLD_CLASSIFICATION = 0.9
     
-    SIMULATOR = "pinocchio"
-    POS_BOUNDS_SCALING_FACTOR = 0.2
-    VEL_BOUNDS_SCALING_FACTOR = 2.0 
     qMin   = np.array([-np.pi,-np.pi])
     qMax   = -qMin
     vMax   = np.array([8.0,8.0])
@@ -60,13 +53,12 @@ def main():
 
     q0 = np.zeros(nq)   # initial joint configuration
     dq0= np.zeros(nq)   # initial joint velocities
-
-    p_ee_des = np.array([-0.1, 0.1, -0.6]) # desired end-effector position
-
-    wall_y = 0.05      # y position of the wall
-
-    w_p = 1e2           # position weight
-    w_a = 1e-5          # acceleration weight
+    
+    qdes = qMax         # desired joint configuration, near the joint limits
+    
+    w_q = 1e2           # position weight
+    w_a = 1e-6          # acceleration weight
+    w_v = 1e-6          # velocity weight
 
     r = RobotWrapper(robot.model, robot.collision_model, robot.visual_model)
     simu = RobotSimulator(conf_doublep, r)
@@ -105,7 +97,7 @@ def main():
     inv_dyn = cs.Function('inv_dyn', [state, ddq], [tau])
 
     # pre-compute state and torque bounds
-    lbx = qMin.tolist() + (-vMax).tolist()
+    lbx = qMin.tolist() + vMin.tolist()
     ubx = qMax.tolist() + vMax.tolist()
     tau_min = (tauMin).tolist()
     tau_max = (tauMax).tolist()
@@ -122,26 +114,18 @@ def main():
     print("Add initial conditions")
     opti.subject_to(X[0] == param_x_init)
     for k in range(N):     
-        # print("Compute cost function")
-        p_ee = forward_kinematics_ee(cs.DM.eye(4), X[k][:nq])[:3,3]
-        cost += w_p * (p_ee - param_p_ee_des).T @ (p_ee - param_p_ee_des)
+        cost += w_q * (X[k][:nq] - qdes).T @ (X[k][:nq] - qdes)
         cost += w_v * X[k][nq:].T @ X[k][nq:]
         cost += w_a * U[k].T @ U[k]
 
         # print("Add dynamics constraints")
         opti.subject_to(X[k+1] == X[k] + dt * f(X[k], U[k]))
-        
-        # print("Add cartesian constraints")
-        opti.subject_to((p_ee[1] >= wall_y))
 
         # print("Add torque constraints")
         opti.subject_to( opti.bounded(tau_min, inv_dyn(X[k], U[k]), tau_max))
-
-    # add the final cost
-    cost += w_final_v * X[-1][nq:].T @ X[-1][nq:]
     
     if(USE_TERMINAL_CONSTRAINT):
-        opti.subject_to(net.nn_func(X[-1]) >= 0.7)
+        opti.subject_to(net.nn_func(X[-1]) >= THRESHOLD_CLASSIFICATION)
 
     opti.minimize(cost)
 
@@ -154,7 +138,7 @@ def main():
         "ipopt.compl_inf_tol": SOLVER_TOLERANCE,
         "print_time": 0,             
         "detect_simple_bounds": True,
-        "ipopt.max_iter": 1000,
+        "ipopt.max_iter": 2000,
         "ipopt.hessian_approximation": "limited-memory",        # without this parameter the l4casadi function not works
         "ipopt.nlp_scaling_method": "gradient-based",
     }
@@ -163,7 +147,6 @@ def main():
 
     # Solve the problem to convergence the first time
     x = np.concatenate([q0, dq0])
-    opti.set_value(param_p_ee_des, p_ee_des)
     opti.set_value(param_x_init, x)
     sol = opti.solve()
     opts["ipopt.max_iter"] = SOLVER_MAX_ITER
@@ -204,12 +187,10 @@ def main():
 
         print("Comput. time: %.3f s"%(end_time-start_time), 
             "Iters: %3d"%sol.stats()['iter_count'], 
-            "Tracking err: %.3f"%np.linalg.norm(p_ee_des-forward_kinematics_ee(cs.DM.eye(4), x[:nq])[:3,3].toarray().squeeze()),
             "Return status ", sol.stats()["return_status"],)
 
 
         comput_time.append(end_time-start_time)
-        tracking_err.append(np.linalg.norm(p_ee_des-forward_kinematics_ee(cs.DM.eye(4), x[:nq])[:3,3].toarray().squeeze()))
         dq_l.append(np.linalg.norm(x[nq:]))
         
         tau = inv_dyn(sol.value(X[0]), sol.value(U[0])).toarray().squeeze()
@@ -222,8 +203,6 @@ def main():
             print(colored("\nUPPER POSITION LIMIT VIOLATED ON JOINTS", "red"), np.where(x[:nq]>qMax)[0])
         if( np.any(x[:nq] < qMin)):
             print(colored("\nLOWER POSITION LIMIT VIOLATED ON JOINTS", "red"), np.where(x[:nq]<qMin)[0])
-        if (forward_kinematics_ee(cs.DM.eye(4), x[:nq])[1,3] < wall_y):
-            print(colored("\nCOLLISION DETECTED", "red"))
             
     print("Mean computation time: %.3f s"%np.mean(comput_time))
     print("Max computation time: %.3f s"%np.max(comput_time))

@@ -11,7 +11,7 @@ import tqdm
 import matplotlib.pyplot as plt
 from model import NeuralNet
 
-DATASET_NAME = "/home/student/shared/orc_project/ur5/datasets/dataset_N4_500.csv"
+DATASET_NAME = "/home/student/shared/orc_project/ur5/datasets/dataset_N15_UR5.csv"
 
 def model_train(model, X_train, y_train, X_val, y_val):
     # loss function and optimizer
