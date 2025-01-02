@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from model import NeuralNet
 
 DATASET_NAME = "/home/student/shared/orc_project/double_pendulum/datasets/dataset_N15_2000.csv"
+SAVE_PATH = "/home/student/shared/orc_project/double_pendulum/models/model.pt"
 
 def model_train(model, X_train, y_train, X_val, y_val):
     # loss function and optimizer
@@ -103,4 +104,4 @@ plt.title("Confusion Matrix")
 plt.show()
 
 # Save the model
-torch.save(model.state_dict(), "/home/student/shared/orc_project/double_pendulum/models/model.pt")
+torch.save(model.state_dict(), SAVE_PATH)
