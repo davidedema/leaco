@@ -76,7 +76,6 @@ def main():
     '''
     opti = cs.Opti()
     param_x_init = opti.parameter(nx)
-    param_p_ee_des = opti.parameter(3)
     cost = 0
 
     # create the dynamics function
