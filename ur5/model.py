@@ -28,6 +28,10 @@ class NeuralNet(nn.Module):
                 nn.init.zeros_(layer.bias)
                 
     def create_casadi_function(self, robot_name, NN_DIR, input_size, load_weights):
+        """
+        Creates a CasADi symbolic function representation of the neural network.
+
+        """
         from casadi import MX, Function
         import l4casadi as l4c
         import torch

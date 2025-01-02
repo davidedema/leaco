@@ -23,7 +23,7 @@ def model_train(model, X_train, y_train, X_val, y_val):
     batch_start = torch.arange(0, len(X_train), batch_size)
 
     # Hold the best model
-    best_acc = - np.inf   # init to negative infinity
+    best_acc = - np.inf 
     best_weights = None
 
     for epoch in range(n_epochs):
@@ -62,8 +62,8 @@ def model_train(model, X_train, y_train, X_val, y_val):
 
 # Function to evaluate the model
 def evaluate_model(model, X_test, y_test):
-    model.eval()  # Set the model to evaluation mode
-    with torch.no_grad():  # Disable gradient computation
+    model.eval()  
+    with torch.no_grad():  
         y_pred = model(X_test).round()
     return y_pred
 
@@ -77,7 +77,7 @@ encoder = LabelEncoder()
 y = encoder.fit_transform(y)
 
 X = torch.tensor(X.values, dtype=torch.float32)
-y = torch.tensor(y, dtype=torch.float32).reshape(-1, 1)
+y = torch.tensor(y, dtype=torch.float32).reshape(-1, 1) # reshape to column vector
 
 # Train-test split: Hold out the test set for final model evaluation
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)

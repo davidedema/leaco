@@ -7,14 +7,15 @@ class NeuralNet(nn.Module):
         super(NeuralNet, self).__init__()
         
         self.linear_stack = nn.Sequential(
-          nn.Linear(in_size, hid_size),
-          nn.GELU(),
-          nn.Linear(hid_size, hid_size),
-          nn.GELU(),
-          nn.Linear(hid_size, out_size),
-          nn.Sigmoid()
+            nn.Linear(in_size, hid_size),
+            nn.GELU(),  
+            nn.Linear(hid_size, hid_size),
+            nn.GELU(),
+            nn.Linear(hid_size, out_size),
+            nn.Sigmoid() 
         )
         
+        # Initialize the weights of the layers
         self.initialize_weights()
         
     def forward(self, x):
@@ -24,26 +25,32 @@ class NeuralNet(nn.Module):
     def initialize_weights(self):
         for layer in self.linear_stack:
             if isinstance(layer, nn.Linear):
-                nn.init.xavier_normal_(layer.weight)
-                nn.init.zeros_(layer.bias)
+                nn.init.xavier_normal_(layer.weight)  # Xavier initialization
+                nn.init.zeros_(layer.bias)  # Initialize biases to zero
                 
     def create_casadi_function(self, robot_name, NN_DIR, input_size, load_weights):
+        """
+        Creates a CasADi symbolic function representation of the neural network.
+
+        """
         from casadi import MX, Function
         import l4casadi as l4c
         import torch
 
-        # Load neural-network weights from a ".pt" file if requested
+        # Load neural network weights from file if requested
         if load_weights:
             device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
             nn_name = f'{NN_DIR}model.pt'
             self.load_state_dict(torch.load(nn_name, map_location=device))
 
-        # Define the input symbol for CasADi
+        # Define a symbolic input using CasADi
         state = MX.sym("x", input_size).T  # CasADi symbolic variable with `input_size` elements
+
+        # Create a CasADi representation using l4casadi library
         self.l4c_model = l4c.L4CasADi(self,
-                                    device='cuda' if torch.cuda.is_available() else 'cpu',
-                                    name=f'{robot_name}_model',
-                                    build_dir=f'{NN_DIR}nn_{robot_name}')
+                                      device='cuda' if torch.cuda.is_available() else 'cpu',
+                                      name=f'{robot_name}_model',
+                                      build_dir=f'{NN_DIR}nn_{robot_name}')
         self.nn_model = self.l4c_model(state)
         
         # Define the CasADi function for the neural network

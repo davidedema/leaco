@@ -14,15 +14,19 @@ from robot_wrapper import RobotWrapper
 import torch
 from model import NeuralNet
 
+MODEL_FOLDER = "/home/student/shared/orc_project/double_pendulum/models/"
+ROBOT_NAME = "double_pendulum"
+NET_INPUT_SIZE = 4
+
 def main():
     
-    # parse the arguments
+    # simulation timesteps
     N_sim = 100
     print("Load robot model")
     robot, _, urdf, _ = load_full("double_pendulum")
 
     print("Create KinDynComputations object")
-    joints_name_list = [s for s in robot.model.names[1:]]   # skip the first name because it is "universe"
+    joints_name_list = [s for s in robot.model.names[1:]]   
     print(joints_name_list)
     nq = len(joints_name_list)                              # number of joints
     nx = 2*nq                                               # size of the state variable
@@ -30,14 +34,16 @@ def main():
     
     # create the neural network
     net = NeuralNet()
-    net.create_casadi_function("ur5", "/home/student/shared/orc_project/double_pendulum/models/", 4, True)
+    net.create_casadi_function(ROBOT_NAME, MODEL_FOLDER, NET_INPUT_SIZE, True)
 
     DO_WARM_START = True
     SOLVER_TOLERANCE = 1e-4
     SOLVER_MAX_ITER = 3
     
+    # MPC horizon
     N = int(N_sim/10)
-    USE_TERMINAL_CONSTRAINT = False
+    # enable terminal constraint = neural network output >= THRESHOLD_CLASSIFICATION
+    USE_TERMINAL_CONSTRAINT = True
     THRESHOLD_CLASSIFICATION = 0.9
     
     qMin   = np.array([-np.pi,-np.pi])
@@ -60,6 +66,7 @@ def main():
     w_a = 1e-6          # acceleration weight
     w_v = 1e-6          # velocity weight
 
+    # create the robot simulator
     r = RobotWrapper(robot.model, robot.collision_model, robot.visual_model)
     simu = RobotSimulator(conf_doublep, r)
     simu.init(q0, dq0)
@@ -68,13 +75,9 @@ def main():
 
 
     print("Create optimization parameters")
-    ''' The parameters P contain:
-        - the initial state (first 12 values)
-        - the target configuration (last 6 values)
-    '''
+    
     opti = cs.Opti()
     param_x_init = opti.parameter(nx)
-    param_p_ee_des = opti.parameter(3)
     cost = 0
 
     # create the dynamics function
@@ -107,23 +110,26 @@ def main():
     X += [opti.variable(nx)] # do not apply pos/vel bounds on initial state
     for k in range(1, N+1): 
         X += [opti.variable(nx)]
+        # add the state bounds
         opti.subject_to( opti.bounded(lbx, X[-1], ubx) )
     for k in range(N): 
         U += [opti.variable(nq)]
 
-    print("Add initial conditions")
+    # add the initial state constraint
     opti.subject_to(X[0] == param_x_init)
-    for k in range(N):     
+    for k in range(N):    
+        # build the cost function 
         cost += w_q * (X[k][:nq] - qdes).T @ (X[k][:nq] - qdes)
         cost += w_v * X[k][nq:].T @ X[k][nq:]
         cost += w_a * U[k].T @ U[k]
 
-        # print("Add dynamics constraints")
+        # add the dynamics constraints
         opti.subject_to(X[k+1] == X[k] + dt * f(X[k], U[k]))
 
-        # print("Add torque constraints")
+        # add the torque limits
         opti.subject_to( opti.bounded(tau_min, inv_dyn(X[k], U[k]), tau_max))
     
+    # add terminal constraint
     if(USE_TERMINAL_CONSTRAINT):
         opti.subject_to(net.nn_func(X[-1]) >= THRESHOLD_CLASSIFICATION)
 
@@ -140,7 +146,6 @@ def main():
         "detect_simple_bounds": True,
         "ipopt.max_iter": 2000,
         "ipopt.hessian_approximation": "limited-memory",        # without this parameter the l4casadi function not works
-        "ipopt.nlp_scaling_method": "gradient-based",
     }
     
     opti.solver("ipopt", opts)
@@ -154,7 +159,6 @@ def main():
 
 
     comput_time = []
-    tracking_err = []
     dq_l = []
     tau_l = []
 
@@ -181,7 +185,6 @@ def main():
         try:
             sol = opti.solve()
         except:
-            # print("Convergence failed!")
             sol = opti.debug
         end_time = clock()
 

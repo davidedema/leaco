@@ -23,7 +23,7 @@ def model_train(model, X_train, y_train, X_val, y_val):
     batch_start = torch.arange(0, len(X_train), batch_size)
 
     # Hold the best model
-    best_acc = - np.inf   # init to negative infinity
+    best_acc = - np.inf  
     best_weights = None
 
     for epoch in range(n_epochs):
