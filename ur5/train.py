@@ -15,51 +15,103 @@ DATASET_NAME = "/home/student/shared/orc_project/ur5/datasets/dataset_N15_UR5.cs
 SAVE_PATH = "/home/student/shared/orc_project/double_pendulum/models/model.pt"
 
 def model_train(model, X_train, y_train, X_val, y_val):
-    # loss function and optimizer
-    loss_fn = nn.BCELoss()  # binary cross entropy
+    # Loss function and optimizer
+    loss_fn = nn.BCELoss()  # Binary Cross-Entropy Loss
     optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
-    n_epochs = 350   # number of epochs to run
-    batch_size = 8  # size of each batch
+    n_epochs = 350  # Number of epochs to run
+    batch_size = 8  # Size of each batch
     batch_start = torch.arange(0, len(X_train), batch_size)
 
+    # Metrics tracking
+    train_losses, val_losses = [], []
+    train_accuracies, val_accuracies = [], []
+
     # Hold the best model
-    best_acc = - np.inf 
+    best_acc = -np.inf
     best_weights = None
 
     for epoch in range(n_epochs):
+        # Training loop
         model.train()
+        epoch_loss = 0.0
+        correct = 0
+        total = 0
+
         with tqdm.tqdm(batch_start, unit="batch", mininterval=0, disable=True) as bar:
             bar.set_description(f"Epoch {epoch}")
             for start in bar:
-                # take a batch
-                X_batch = X_train[start:start+batch_size]
-                y_batch = y_train[start:start+batch_size]
-                # forward pass
-                y_pred = model(X_batch) 
+                # Take a batch
+                X_batch = X_train[start:start + batch_size]
+                y_batch = y_train[start:start + batch_size]
+
+                # Forward pass
+                y_pred = model(X_batch)
                 loss = loss_fn(y_pred, y_batch)
-                # backward pass
+
+                # Backward pass
                 optimizer.zero_grad()
                 loss.backward()
-                # update weights
                 optimizer.step()
-                # print progress
-                acc = (y_pred.round() == y_batch).float().mean()
-                bar.set_postfix(
-                    loss=float(loss),
-                    acc=float(acc)
-                )
-        # evaluate accuracy at end of each epoch
+
+                # Accumulate metrics
+                epoch_loss += loss.item() * len(X_batch)
+                correct += (y_pred.round() == y_batch).float().sum().item()
+                total += len(y_batch)
+
+                # Print progress
+                bar.set_postfix(loss=float(loss), acc=float(correct / total))
+
+        # Record training metrics
+        train_loss = epoch_loss / total
+        train_acc = correct / total
+        train_losses.append(train_loss)
+        train_accuracies.append(train_acc)
+
+        # Validation loop
         model.eval()
-        y_pred = model(X_val)
-        acc = (y_pred.round() == y_val).float().mean()
-        acc = float(acc)
-        if acc > best_acc:
-            best_acc = acc
+        with torch.no_grad():
+            y_pred_val = model(X_val)
+            val_loss = loss_fn(y_pred_val, y_val).item()
+            val_acc = (y_pred_val.round() == y_val).float().mean().item()
+
+        val_losses.append(val_loss)
+        val_accuracies.append(val_acc)
+
+        # Save the best model
+        if val_acc > best_acc:
+            best_acc = val_acc
             best_weights = copy.deepcopy(model.state_dict())
-    # restore model and return best accuracy
+
+    # Restore the best model
     model.load_state_dict(best_weights)
+
+    # Plot metrics
+    plt.figure(figsize=(12, 6))
+
+    # Plot loss
+    plt.subplot(1, 2, 1)
+    plt.plot(train_losses, label="Train Loss")
+    plt.plot(val_losses, label="Validation Loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.title("Loss per Epoch")
+    plt.legend()
+
+    # Plot accuracy
+    plt.subplot(1, 2, 2)
+    plt.plot(train_accuracies, label="Train Accuracy")
+    plt.plot(val_accuracies, label="Validation Accuracy")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.title("Accuracy per Epoch")
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+
     return best_acc
+
 
 # Function to evaluate the model
 def evaluate_model(model, X_test, y_test):
