@@ -6,6 +6,7 @@ import pandas as pd
 from tqdm import tqdm
 from example_robot_data.robots_loader import load
 from multiprocessing import Pool, Manager
+import os
 
 def create_single_case(kinDyn, nq, nx, dt, N, lbx, ubx, tau_min, tau_max, effort_limit, velocity_limit, position_limit, positive_left, negative_left):
     """
@@ -109,6 +110,10 @@ def worker(kinDyn, nq, nx, dt, N, lbx, ubx, tau_min, tau_max, effort_limit, velo
     Returns:
         list: List of generated cases.
     """
+    
+    # Set a unique random seed based on the process ID
+    np.random.seed(os.getpid())
+    
     results = []
     positive_left, negative_left = num_cases//2, num_cases//2
     while positive_left > 0 or negative_left > 0:

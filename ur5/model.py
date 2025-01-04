@@ -9,7 +9,9 @@ class NeuralNet(nn.Module):
         self.linear_stack = nn.Sequential(
           nn.Linear(in_size, hid_size),
           nn.GELU(),
+          nn.Dropout(),
           nn.Linear(hid_size, hid_size),
+          nn.Dropout(),
           nn.GELU(),
           nn.Linear(hid_size, out_size),
           nn.Sigmoid()

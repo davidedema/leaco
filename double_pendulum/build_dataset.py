@@ -5,6 +5,7 @@ import pandas as pd
 from example_robot_data.robots_loader import load
 from multiprocessing import Pool, Manager
 from time import time as clock
+import os
 
 def create_single_case(kinDyn, nq, nx, dt, N, qMin, qMax, vMin, vMax, tauMin, tauMax, positive_left, negative_left):
     """
@@ -117,7 +118,7 @@ def worker(kinDyn, nq, nx, dt, N, qMin, qMax, vMin, vMax, tauMin, tauMax, num_ca
     Worker function to generate multiple data cases in parallel.
 
     Parameters:
-        kinDyn, nq, nx, dt, N, lbx, ubx, tau_min, tau_max, effort_limit, velocity_limit, position_limit: As described above.
+        kinDyn, nq, nx, dt, N, qMin, qMax, vMin, vMax, tauMin, tauMax: As described above.
         num_cases (int): Number of data cases to generate.
 
     Returns:
@@ -126,6 +127,10 @@ def worker(kinDyn, nq, nx, dt, N, qMin, qMax, vMin, vMax, tauMin, tauMax, num_ca
     results = []
     positive_left = num_cases // 2
     negative_left = num_cases // 2
+
+    # Set a unique random seed based on the process ID
+    np.random.seed(os.getpid())
+
     while positive_left > 0 or negative_left > 0:
         result = create_single_case(kinDyn, nq, nx, dt, N, qMin, qMax, vMin, vMax, tauMin, tauMax, positive_left, negative_left)
         if result:

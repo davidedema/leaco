@@ -20,7 +20,7 @@ DO_PLOTS = True
 def model_train(model, X_train, y_train, X_val, y_val):
     # Loss function and optimizer
     loss_fn = nn.BCELoss()  # Binary Cross-Entropy Loss
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.AdamW(model.parameters(), lr=0.0001)
 
     n_epochs = 350  # Number of epochs to run
     batch_size = 8  # Size of each batch
