@@ -7,7 +7,7 @@ from tqdm import tqdm
 from example_robot_data.robots_loader import load
 from multiprocessing import Pool, Manager
 
-def create_single_case(kinDyn, nq, nx, dt, N, lbx, ubx, tau_min, tau_max, effort_limit, velocity_limit, position_limit):
+def create_single_case(kinDyn, nq, nx, dt, N, lbx, ubx, tau_min, tau_max, effort_limit, velocity_limit, position_limit, positive_left, negative_left):
     """
     Creates a single data case for the UR5 robot.
     
@@ -88,9 +88,15 @@ def create_single_case(kinDyn, nq, nx, dt, N, lbx, ubx, tau_min, tau_max, effort
 
     try:
         opti.solve()
-        return [*q0, *dq0, 1]  # State is in the N-step backward reachable set
+        if positive_left > 0:
+            return [*q0, *dq0, 1]
+        else: 
+            return False
     except:
-        return [*q0, *dq0, 0]  # State is not in the N-step backward reachable set
+        if negative_left > 0:
+            return [*q0, *dq0, 0]
+        else:
+            return False
 
 def worker(kinDyn, nq, nx, dt, N, lbx, ubx, tau_min, tau_max, effort_limit, velocity_limit, position_limit, num_cases):
     """
@@ -104,9 +110,19 @@ def worker(kinDyn, nq, nx, dt, N, lbx, ubx, tau_min, tau_max, effort_limit, velo
         list: List of generated cases.
     """
     results = []
-    for _ in range(num_cases):
-        result = create_single_case(kinDyn, nq, nx, dt, N, lbx, ubx, tau_min, tau_max, effort_limit, velocity_limit, position_limit)
-        results.append(result)
+    positive_left, negative_left = num_cases//2, num_cases//2
+    while positive_left > 0 or negative_left > 0:
+        result = create_single_case(kinDyn, nq, nx, dt, N, lbx, ubx, tau_min, tau_max, effort_limit, velocity_limit, position_limit, positive_left, negative_left)
+        if result:
+            if result[-1] == 1:
+                positive_left -= 1
+                if positive_left % 10 == 0:
+                    print(f"pos: {positive_left}")
+            else:
+                negative_left -= 1
+                if negative_left % 10 == 0:
+                    print(f"neg: {negative_left}")
+            results.append(result)
     return results
 
 if __name__ == "__main__":

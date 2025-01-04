@@ -1,8 +1,10 @@
+from collections import Counter
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from time import time as clock
 import torch
 import copy
 import numpy as np
@@ -13,11 +15,12 @@ from model import NeuralNet
 
 DATASET_NAME = "/home/student/shared/orc_project/double_pendulum/datasets/dataset_N15_2000.csv"
 SAVE_PATH = "/home/student/shared/orc_project/double_pendulum/models/model.pt"
+DO_PLOTS = False
 
 def model_train(model, X_train, y_train, X_val, y_val):
     # Loss function and optimizer
     loss_fn = nn.BCELoss()  # Binary Cross-Entropy Loss
-    optimizer = optim.AdamW(model.parameters(), lr=0.0001)
+    optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
     n_epochs = 350  # Number of epochs to run
     batch_size = 8  # Size of each batch
@@ -86,30 +89,31 @@ def model_train(model, X_train, y_train, X_val, y_val):
 
     # Restore the best model
     model.load_state_dict(best_weights)
+    
+    if DO_PLOTS:
+        # Plot metrics
+        plt.figure(figsize=(12, 6))
 
-    # Plot metrics
-    plt.figure(figsize=(12, 6))
+        # Plot loss
+        plt.subplot(1, 2, 1)
+        plt.plot(train_losses, label="Train Loss")
+        plt.plot(val_losses, label="Validation Loss")
+        plt.xlabel("Epoch")
+        plt.ylabel("Loss")
+        plt.title("Loss per Epoch")
+        plt.legend()
 
-    # Plot loss
-    plt.subplot(1, 2, 1)
-    plt.plot(train_losses, label="Train Loss")
-    plt.plot(val_losses, label="Validation Loss")
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-    plt.title("Loss per Epoch")
-    plt.legend()
+        # Plot accuracy
+        plt.subplot(1, 2, 2)
+        plt.plot(train_accuracies, label="Train Accuracy")
+        plt.plot(val_accuracies, label="Validation Accuracy")
+        plt.xlabel("Epoch")
+        plt.ylabel("Accuracy")
+        plt.title("Accuracy per Epoch")
+        plt.legend()
 
-    # Plot accuracy
-    plt.subplot(1, 2, 2)
-    plt.plot(train_accuracies, label="Train Accuracy")
-    plt.plot(val_accuracies, label="Validation Accuracy")
-    plt.xlabel("Epoch")
-    plt.ylabel("Accuracy")
-    plt.title("Accuracy per Epoch")
-    plt.legend()
-
-    plt.tight_layout()
-    plt.show()
+        plt.tight_layout()
+        plt.show()
 
     return best_acc
 
@@ -121,40 +125,72 @@ def evaluate_model(model, X_test, y_test):
         y_pred = model(X_test).round()
     return y_pred
 
-data = pd.read_csv(DATASET_NAME)
+def main():
 
-X = data.iloc[2:, :4]    # features   
-y = data.iloc[2:, 4]      # target
+    time_start = clock()
 
-# Encoding the target
-encoder = LabelEncoder()
-y = encoder.fit_transform(y)
+    data = pd.read_csv(DATASET_NAME)
 
-X = torch.tensor(X.values, dtype=torch.float32)
-y = torch.tensor(y, dtype=torch.float32).reshape(-1, 1)
+    X = data.iloc[2:, :4]    # features   
+    y = data.iloc[2:, 4]      # target
 
-# Train-test split: Hold out the test set for final model evaluation
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
+    # Encoding the target
+    encoder = LabelEncoder()
+    y = encoder.fit_transform(y)
 
-# Train the model
-model = NeuralNet()
-model_train(model, X_train, y_train, X_test, y_test)
+    X = torch.tensor(X.values, dtype=torch.float32)
+    y = torch.tensor(y, dtype=torch.float32).reshape(-1, 1)
 
-# Evaluate the model on test set
-y_pred = evaluate_model(model, X_test, y_test)
+    # Train-test split: Hold out the test set for final model evaluation
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
+    
+    # print how many 1 and 0 in the train and test set
+    print("Train set: ", Counter(y_train.numpy().flatten()))
+    print("Test set: ", Counter(y_test.numpy().flatten()))
+    
 
-# Convert predictions and true labels to numpy arrays for compatibility with sklearn
-y_pred_np = y_pred.numpy().astype(int).flatten()
-y_test_np = y_test.numpy().astype(int).flatten()
+    # Train the model
+    model = NeuralNet()
+    model_train(model, X_train, y_train, X_test, y_test)
 
-# Compute the confusion matrix
-cm = confusion_matrix(y_test_np, y_pred_np)
+    # Evaluate the model on test set
+    y_pred = evaluate_model(model, X_test, y_test)
 
-# Display the confusion matrix
-disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=encoder.classes_)
-disp.plot(cmap=plt.cm.Blues)
-plt.title("Confusion Matrix")
-plt.show()
+    # Convert predictions and true labels to numpy arrays for compatibility with sklearn
+    y_pred_np = y_pred.numpy().astype(int).flatten()
+    y_test_np = y_test.numpy().astype(int).flatten()
 
-# Save the model
-torch.save(model.state_dict(), SAVE_PATH)
+    # Compute the confusion matrix
+    time_end = clock()
+    if DO_PLOTS:
+        cm = confusion_matrix(y_test_np, y_pred_np)
+
+        # Display the confusion matrix
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=encoder.classes_)
+        disp.plot(cmap=plt.cm.Blues)
+        plt.title("Confusion Matrix")
+        plt.show()
+
+    # Save the model
+    torch.save(model.state_dict(), SAVE_PATH)
+
+    print("Training and evaluation completed in {:.2f} seconds.".format(time_end - time_start))
+    
+    # compute accuracy precision recall and f1 and print them
+    TP = np.sum(np.logical_and(y_test_np == 1, y_pred_np == 1))
+    TN = np.sum(np.logical_and(y_test_np == 0, y_pred_np == 0))
+    FP = np.sum(np.logical_and(y_test_np == 0, y_pred_np == 1))
+    FN = np.sum(np.logical_and(y_test_np == 1, y_pred_np == 0))
+    accuracy = (TP + TN) / (TP + TN + FP + FN)
+    precision = TP / (TP + FP)
+    recall = TP / (TP + FN)
+    f1 = 2 * precision * recall / (precision + recall)
+    print("Accuracy: {:.2f}".format(accuracy))
+    print("Precision: {:.2f}".format(precision))
+    print("Recall: {:.2f}".format(recall))
+    print("F1 Score: {:.2f}".format(f1))
+    
+
+
+if __name__ == "__main__":
+    main()
