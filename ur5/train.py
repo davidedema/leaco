@@ -12,14 +12,14 @@ import matplotlib.pyplot as plt
 from model import NeuralNet
 
 DATASET_NAME = "/home/student/shared/orc_project/ur5/datasets/dataset_N15_UR5.csv"
-SAVE_PATH = "/home/student/shared/orc_project/double_pendulum/models/model.pt"
+SAVE_PATH = "/home/student/shared/orc_project/ur5/models/model.pt"
 
 def model_train(model, X_train, y_train, X_val, y_val):
     # Loss function and optimizer
     loss_fn = nn.BCELoss()  # Binary Cross-Entropy Loss
-    optimizer = optim.Adam(model.parameters(), lr=0.0001)
+    optimizer = optim.AdamW(model.parameters(), lr=0.0001)
 
-    n_epochs = 350  # Number of epochs to run
+    n_epochs = 200  # Number of epochs to run
     batch_size = 8  # Size of each batch
     batch_start = torch.arange(0, len(X_train), batch_size)
 

@@ -1,10 +1,10 @@
-from time import clock
 import numpy as np
 from adam.casadi.computations import KinDynComputations
 import casadi as cs
 import pandas as pd
 from example_robot_data.robots_loader import load
 from multiprocessing import Pool, Manager
+from time import time as clock
 
 def create_single_case(kinDyn, nq, nx, dt, N, qMin, qMax, vMin, vMax, tauMin, tauMax):
     """
