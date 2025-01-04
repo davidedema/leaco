@@ -1,13 +1,13 @@
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import StratifiedKFold, train_test_split
+from torch.utils.data import DataLoader, TensorDataset
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import torch
 import copy
 import numpy as np
 import torch.nn as nn
 import torch.optim as optim
-import tqdm
 import matplotlib.pyplot as plt
 from model import NeuralNet
 
@@ -17,11 +17,10 @@ SAVE_PATH = "/home/student/shared/orc_project/double_pendulum/models/model.pt"
 def model_train(model, X_train, y_train, X_val, y_val):
     # Loss function and optimizer
     loss_fn = nn.BCELoss()  # Binary Cross-Entropy Loss
-    optimizer = optim.Adam(model.parameters(), lr=0.0001)
+    optimizer = optim.AdamW(model.parameters(), lr=0.0001)
 
     n_epochs = 350  # Number of epochs to run
     batch_size = 8  # Size of each batch
-    batch_start = torch.arange(0, len(X_train), batch_size)
 
     # Metrics tracking
     train_losses, val_losses = [], []
@@ -30,6 +29,9 @@ def model_train(model, X_train, y_train, X_val, y_val):
     # Hold the best model
     best_acc = -np.inf
     best_weights = None
+    
+    train_loader = DataLoader(TensorDataset(X_train, y_train), batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(TensorDataset(X_val, y_val), batch_size=batch_size, shuffle=False)
 
     for epoch in range(n_epochs):
         # Training loop
@@ -37,30 +39,20 @@ def model_train(model, X_train, y_train, X_val, y_val):
         epoch_loss = 0.0
         correct = 0
         total = 0
-
-        with tqdm.tqdm(batch_start, unit="batch", mininterval=0, disable=True) as bar:
-            bar.set_description(f"Epoch {epoch}")
-            for start in bar:
-                # Take a batch
-                X_batch = X_train[start:start + batch_size]
-                y_batch = y_train[start:start + batch_size]
-                
-                # Forward pass
-                y_pred = model(X_batch)
-                loss = loss_fn(y_pred, y_batch)
-
-                # Backward pass
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-
-                # Accumulate metrics
-                epoch_loss += loss.item() * len(X_batch)
-                correct += (y_pred.round() == y_batch).float().sum().item()
-                total += len(y_batch)
-
-                # Print progress
-                bar.set_postfix(loss=float(loss), acc=float(correct / total))
+        for X_batch, y_batch in train_loader:
+            # Forward pass
+            y_pred = model(X_batch)
+            loss = loss_fn(y_pred, y_batch)
+            
+            # Backward pass
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            
+            # Accumulate metrics
+            epoch_loss += loss.item() * len(X_batch)
+            correct += (y_pred.round() == y_batch).float().sum().item()
+            total += len(y_batch)
         
         # Record training metrics
         train_loss = epoch_loss / total
@@ -70,11 +62,20 @@ def model_train(model, X_train, y_train, X_val, y_val):
 
         # Validation loop
         model.eval()
+        epoch_loss = 0.0
+        correct = 0
+        total = 0
         with torch.no_grad():
-            y_pred_val = model(X_val)
-            val_loss = loss_fn(y_pred_val, y_val).item()
-            val_acc = (y_pred_val.round() == y_val).float().mean().item()
+            for X_batch, y_batch in val_loader:
+                y_pred = model(X_batch)
+                loss = loss_fn(y_pred, y_batch)
+                epoch_loss += loss.item() * len(X_batch)
+                correct += (y_pred.round() == y_batch).float().sum().item()
+                total += len(y_batch)
         
+        # Record validation metrics
+        val_loss = epoch_loss / total
+        val_acc = correct / total
         val_losses.append(val_loss)
         val_accuracies.append(val_acc)
 
