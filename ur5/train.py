@@ -15,7 +15,7 @@ from model import NeuralNet
 
 DATASET_NAME = "/home/student/shared/orc_project/ur5/datasets/dataset_N15_UR5.csv"
 SAVE_PATH = "/home/student/shared/orc_project/ur5/models/model.pt"
-DO_PLOTS = True
+DO_PLOTS = False
 
 def model_train(model, X_train, y_train, X_val, y_val):
     # Loss function and optimizer

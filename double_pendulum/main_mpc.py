@@ -17,6 +17,7 @@ from model import NeuralNet
 MODEL_FOLDER = "/home/student/shared/orc_project/double_pendulum/models/"
 ROBOT_NAME = "double_pendulum"
 NET_INPUT_SIZE = 4
+DO_PLOTS = True
 
 def main():
     
@@ -44,7 +45,7 @@ def main():
     N = int(N_sim/10)
     # enable terminal constraint = neural network output >= THRESHOLD_CLASSIFICATION
     USE_TERMINAL_CONSTRAINT = True
-    THRESHOLD_CLASSIFICATION = 0.9
+    THRESHOLD_CLASSIFICATION = 0.5
     
     qMin   = np.array([-np.pi,-np.pi])
     qMax   = -qMin
@@ -132,6 +133,8 @@ def main():
     # add terminal constraint
     if(USE_TERMINAL_CONSTRAINT):
         opti.subject_to(net.nn_func(X[-1]) >= THRESHOLD_CLASSIFICATION)
+        # opti.subject_to(X[N-1] == X[N])
+        
 
     opti.minimize(cost)
 
@@ -161,6 +164,10 @@ def main():
     comput_time = []
     dq_l = []
     tau_l = []
+    qj_l = []
+    tauj_l = []
+    ddqj_l = []
+    dqj_l = []
 
 
     print("Start the MPC loop")
@@ -187,6 +194,12 @@ def main():
         except:
             sol = opti.debug
         end_time = clock()
+        
+        # append the results for the plots of single joints
+        qj_l.append(sol.value(X[0])[:nq])
+        dqj_l.append(sol.value(X[0])[nq:])
+        ddqj_l.append(sol.value(U[0]))
+        tauj_l.append(inv_dyn(sol.value(X[0]), sol.value(U[0])).toarray().squeeze())
 
         print("Comput. time: %.3f s"%(end_time-start_time), 
             "Iters: %3d"%sol.stats()['iter_count'], 
@@ -211,6 +224,49 @@ def main():
     print("Max computation time: %.3f s"%np.max(comput_time))
     print("Mean dq_l: %.3f"%np.mean(dq_l))
     print("Max dq_l: %.3f"%np.max(dq_l))
+
+    # include plots per single joint
+    
+    if(DO_PLOTS):
+        # Plot positions
+        plt.figure(figsize=(10, 6))
+        for i in range(nq):
+            plt.plot([q[i] for q in qj_l], label=f"Joint {joints_name_list[i]}")
+        plt.title("Joint Positions")
+        plt.xlabel("Time step")
+        plt.ylabel("Position (rad)")
+        plt.legend()
+        
+        # Plot velocities
+        plt.figure(figsize=(10, 6))
+        for i in range(nq):
+            plt.plot([dq[i] for dq in dqj_l], label=f"Joint {joints_name_list[i]}")
+        plt.title("Joint Velocities")
+        plt.xlabel("Time step")
+        plt.ylabel("Velocity (rad/s)")
+        plt.legend()
+        
+        # Plot accelerations
+        plt.figure(figsize=(10, 6))
+        for i in range(nq):
+            plt.plot([ddq[i] for ddq in ddqj_l], label=f"Joint {joints_name_list[i]}")
+        plt.title("Joint Accelerations")
+        plt.xlabel("Time step")
+        plt.ylabel("Acceleration (rad/s^2)")
+        plt.legend()
+        
+        # Plot torques
+        plt.figure(figsize=(10, 6))
+        for i in range(nq):
+            plt.plot([tau[i] for tau in tauj_l], label=f"Joint {joints_name_list[i]}")
+        plt.title("Joint Torques")
+        plt.xlabel("Time step")
+        plt.ylabel("Torque (Nm)")
+        plt.legend()
+        plt.show()
+            
+    
+
 
     
 if __name__ == "__main__":
