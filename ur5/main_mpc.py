@@ -218,10 +218,21 @@ def main():
         simu.simulate(tau, dt, int(dt/dt_sim))
         x = np.concatenate([simu.q, simu.v])
 
+        # check if the joint limits are violated
         if( np.any(x[:nq] > qMax)):
             print(colored("\nUPPER POSITION LIMIT VIOLATED ON JOINTS", "red"), np.where(x[:nq]>qMax)[0])
         if( np.any(x[:nq] < qMin)):
             print(colored("\nLOWER POSITION LIMIT VIOLATED ON JOINTS", "red"), np.where(x[:nq]<qMin)[0])
+        # check if the velocity limits are violated
+        if( np.any(x[nq:] > vMax)):
+            print(colored("\nUPPER VELOCITY LIMIT VIOLATED ON JOINTS", "red"), np.where(x[nq:]>vMax)[0])
+        if( np.any(x[nq:] < vMin)):
+            print(colored("\nLOWER VELOCITY LIMIT VIOLATED ON JOINTS", "red"), np.where(x[nq:]<vMin)[0])
+        # check if the torque limits are violated
+        if( np.any(tau > tauMax)):
+            print(colored("\nUPPER TORQUE LIMIT VIOLATED ON JOINTS", "red"), np.where(tau>tauMax)[0])
+        if( np.any(tau < tauMin)):
+            print(colored("\nLOWER TORQUE LIMIT VIOLATED ON JOINTS", "red"), np.where(tau<tauMin)[0])
             
     print("Mean computation time: %.3f s"%np.mean(comput_time))
     print("Max computation time: %.3f s"%np.max(comput_time))
@@ -235,6 +246,8 @@ def main():
         plt.figure(figsize=(10, 6))
         for i in range(nq):
             plt.plot([q[i] for q in qj_l], label=f"Joint {joints_name_list[i]}")
+            plt.axhline(y=qMin[i], color='r', linestyle='--', label=f"Min limit {joints_name_list[i]}" if i == 0 else "")
+            plt.axhline(y=qMax[i], color='g', linestyle='--', label=f"Max limit {joints_name_list[i]}" if i == 0 else "")
         plt.title("Joint Positions")
         plt.xlabel("Time step")
         plt.ylabel("Position (rad)")
@@ -244,6 +257,8 @@ def main():
         plt.figure(figsize=(10, 6))
         for i in range(nq):
             plt.plot([dq[i] for dq in dqj_l], label=f"Joint {joints_name_list[i]}")
+            plt.axhline(y=vMin[i], color='r', linestyle='--', label=f"Min limit {joints_name_list[i]}" if i == 0 else "")
+            plt.axhline(y=vMax[i], color='g', linestyle='--', label=f"Max limit {joints_name_list[i]}" if i == 0 else "")
         plt.title("Joint Velocities")
         plt.xlabel("Time step")
         plt.ylabel("Velocity (rad/s)")
@@ -262,6 +277,8 @@ def main():
         plt.figure(figsize=(10, 6))
         for i in range(nq):
             plt.plot([tau[i] for tau in tauj_l], label=f"Joint {joints_name_list[i]}")
+            plt.axhline(y=tauMin[i], color='r', linestyle='--', label=f"Min limit {joints_name_list[i]}" if i == 0 else "")
+            plt.axhline(y=tauMax[i], color='g', linestyle='--', label=f"Max limit {joints_name_list[i]}" if i == 0 else "")
         plt.title("Joint Torques")
         plt.xlabel("Time step")
         plt.ylabel("Torque (Nm)")
