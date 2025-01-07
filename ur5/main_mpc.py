@@ -14,10 +14,10 @@ from robot_wrapper import RobotWrapper
 import torch
 from model import NeuralNet
 
-MODEL_FOLDER = "/home/student/shared/orc_project/ur5/models/"
+MODEL_FOLDER = "/home/student/shared/leaco/ur5/models/"
 ROBOT_NAME = "ur5"
 NET_INPUT_SIZE = 12
-DO_PLOTS = True
+DO_PLOTS = False
 
 def main():
     
@@ -45,7 +45,7 @@ def main():
     CONTROL_BOUNDS_SCALING_FACTOR = 1
     # enable terminal constraint = neural network output >= THRESHOLD_CLASSIFICATION
     USE_TERMINAL_CONSTRAINT = True
-    THRESHOLD_CLASSIFICATION = 0.5
+    THRESHOLD_CLASSIFICATION = 0.65
     
     
     SIMULATOR = "pinocchio"
@@ -67,8 +67,8 @@ def main():
     qdes = qMin         # desired joint configuration, near the joint limits
 
     w_q = 1e2           # position weight
-    w_a = 1e-6          # acceleration weight
-    w_v = 1e-6          # velocity weight
+    w_a = 1e-5          # acceleration weight
+    w_v = 1e-5          # velocity weight
 
     
     # create the robot simulator
@@ -136,8 +136,8 @@ def main():
     
     # add terminal constraint
     if(USE_TERMINAL_CONSTRAINT):
-        # opti.subject_to(net.nn_func(X[-1]) >= THRESHOLD_CLASSIFICATION)
-        opti.subject_to(X[-1][nq:] == 0.0)
+        opti.subject_to(net.nn_func(X[-1]) >= THRESHOLD_CLASSIFICATION)
+        # opti.subject_to(X[-1][nq:] == 0.0)
 
     opti.minimize(cost)
 
@@ -173,7 +173,7 @@ def main():
     dqj_l = []
 
 
-    print("Start the MPC loop")
+    input("Press Enter to start the MPC loop...")
     for i in range(N_sim):
         start_time = clock()
 
@@ -226,8 +226,8 @@ def main():
         # check if the velocity limits are violated
         if( np.any(x[nq:] > vMax)):
             print(colored("\nUPPER VELOCITY LIMIT VIOLATED ON JOINTS", "red"), np.where(x[nq:]>vMax)[0])
-        if( np.any(x[nq:] < vMin)):
-            print(colored("\nLOWER VELOCITY LIMIT VIOLATED ON JOINTS", "red"), np.where(x[nq:]<vMin)[0])
+        if( np.any(x[nq:] < -vMax)):
+            print(colored("\nLOWER VELOCITY LIMIT VIOLATED ON JOINTS", "red"), np.where(x[nq:]<-vMax)[0])
         # check if the torque limits are violated
         if( np.any(tau > tauMax)):
             print(colored("\nUPPER TORQUE LIMIT VIOLATED ON JOINTS", "red"), np.where(tau>tauMax)[0])
@@ -246,8 +246,8 @@ def main():
         plt.figure(figsize=(10, 6))
         for i in range(nq):
             plt.plot([q[i] for q in qj_l], label=f"Joint {joints_name_list[i]}")
-            plt.axhline(y=qMin[i], color='r', linestyle='--', label=f"Min limit {joints_name_list[i]}" if i == 0 else "")
-            plt.axhline(y=qMax[i], color='g', linestyle='--', label=f"Max limit {joints_name_list[i]}" if i == 0 else "")
+            # plt.axhline(y=qMin[i], color='r', linestyle='--', label=f"Min limit {joints_name_list[i]}" if i == 0 else "")
+            # plt.axhline(y=qMax[i], color='g', linestyle='--', label=f"Max limit {joints_name_list[i]}" if i == 0 else "")
         plt.title("Joint Positions")
         plt.xlabel("Time step")
         plt.ylabel("Position (rad)")
@@ -257,8 +257,8 @@ def main():
         plt.figure(figsize=(10, 6))
         for i in range(nq):
             plt.plot([dq[i] for dq in dqj_l], label=f"Joint {joints_name_list[i]}")
-            plt.axhline(y=vMin[i], color='r', linestyle='--', label=f"Min limit {joints_name_list[i]}" if i == 0 else "")
-            plt.axhline(y=vMax[i], color='g', linestyle='--', label=f"Max limit {joints_name_list[i]}" if i == 0 else "")
+            # plt.axhline(y=-vMax[i], color='r', linestyle='--', label=f"Min limit {joints_name_list[i]}" if i == 0 else "")
+            # plt.axhline(y=vMax[i], color='g', linestyle='--', label=f"Max limit {joints_name_list[i]}" if i == 0 else "")
         plt.title("Joint Velocities")
         plt.xlabel("Time step")
         plt.ylabel("Velocity (rad/s)")
@@ -277,14 +277,13 @@ def main():
         plt.figure(figsize=(10, 6))
         for i in range(nq):
             plt.plot([tau[i] for tau in tauj_l], label=f"Joint {joints_name_list[i]}")
-            plt.axhline(y=tauMin[i], color='r', linestyle='--', label=f"Min limit {joints_name_list[i]}" if i == 0 else "")
-            plt.axhline(y=tauMax[i], color='g', linestyle='--', label=f"Max limit {joints_name_list[i]}" if i == 0 else "")
+            # plt.axhline(y=tauMin[i], color='r', linestyle='--', label=f"Min limit {joints_name_list[i]}" if i == 0 else "")
+            # plt.axhline(y=tauMax[i], color='g', linestyle='--', label=f"Max limit {joints_name_list[i]}" if i == 0 else "")
         plt.title("Joint Torques")
         plt.xlabel("Time step")
         plt.ylabel("Torque (Nm)")
         plt.legend()
         plt.show()
 
-    
 if __name__ == "__main__":
     main()

@@ -7,17 +7,17 @@ from termcolor import colored
 
 import plot_utils as plut
 from example_robot_data.robots_loader import load, load_full
-import orc_project.double_pendulum.conf_doublep as conf_doublep
+import leaco.double_pendulum.conf_doublep as conf_doublep
 from robot_simulator import RobotSimulator
 from robot_wrapper import RobotWrapper 
 
 import torch
 from model import NeuralNet
 
-MODEL_FOLDER = "/home/student/shared/orc_project/double_pendulum/models/"
+MODEL_FOLDER = "/home/student/shared/leaco/double_pendulum/models/"
 ROBOT_NAME = "double_pendulum"
 NET_INPUT_SIZE = 4
-DO_PLOTS = True
+DO_PLOTS = False
 
 def main():
     
@@ -169,8 +169,7 @@ def main():
     ddqj_l = []
     dqj_l = []
 
-
-    print("Start the MPC loop")
+    input("Press Enter to start the MPC loop...")
     for i in range(N_sim):
         start_time = clock()
 
@@ -281,10 +280,6 @@ def main():
         plt.ylabel("Torque (Nm)")
         plt.legend()
         plt.show()
-            
-    
 
-
-    
 if __name__ == "__main__":
     main()
