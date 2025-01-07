@@ -1,7 +1,7 @@
 <p align='center'>
     <h1 align="center">LEArning for COntrol</h1>
     <p align="center">
-    Project for Optimization based Robot Control at the University of Trento A.Y.2024/2025
+    Project for Learning and Optimization Robot Control at the University of Trento A.Y.2024/2025
     </p>
 </p>
 
