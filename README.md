@@ -90,5 +90,7 @@ For running the main script enter in the folder `double_pendulum` or `ur5` and
 ```
 python3 main_mpc.py
 ```
+In order to use the Neural Network terminal contraint just set the `USE_TERMINAL_CONSTRAINT` flag to true
+
 New dataset could be generated with the `generate_dataset.py` script and for training them just use the `train.py` script.
 
