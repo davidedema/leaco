@@ -12,9 +12,13 @@ import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
 from model import NeuralNet
+import os
 
-DATASET_NAME = "/home/student/shared/orc_project/double_pendulum/datasets/dataset_N15_2000.csv"
-SAVE_PATH = "/home/student/shared/orc_project/double_pendulum/models/model.pt"
+
+PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
+DATASET = "dataset_N15_2000.csv"
+DATASET_NAME = os.path.join(PROJECT_PATH, "datasets", DATASET)
+SAVE_PATH = os.path.join(PROJECT_PATH, "models/model.pt")
 DO_PLOTS = False
 
 def model_train(model, X_train, y_train, X_val, y_val):

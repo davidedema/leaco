@@ -12,9 +12,13 @@ import torch.optim as optim
 from time import time as clock
 import matplotlib.pyplot as plt
 from model import NeuralNet
+import os
 
-DATASET_NAME = "/home/student/shared/orc_project/ur5/datasets/dataset_N15_UR5.csv"
-SAVE_PATH = "/home/student/shared/orc_project/ur5/models/model.pt"
+
+PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
+DATASET = "dataset_N15_UR5_6000.csv"
+DATASET_NAME = os.path.join(PROJECT_PATH, "datasets", DATASET)
+SAVE_PATH = os.path.join(PROJECT_PATH, "models/model.pt")
 DO_PLOTS = False
 
 def model_train(model, X_train, y_train, X_val, y_val):
@@ -149,7 +153,7 @@ def main():
     print("Train set: ", Counter(y_train.numpy().flatten()))
     print("Test set: ", Counter(y_test.numpy().flatten()))
 
-    # Train the model
+    # Train the modeldataset_N15_UR5.csv
     model = NeuralNet()
     model_train(model, X_train, y_train, X_test, y_test)
 

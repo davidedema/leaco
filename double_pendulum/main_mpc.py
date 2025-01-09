@@ -13,8 +13,10 @@ from robot_wrapper import RobotWrapper
 
 import torch
 from model import NeuralNet
+import os
 
-MODEL_FOLDER = "/home/student/shared/leaco/double_pendulum/models/"
+PROJECT_FOLDER = os.path.dirname(os.path.abspath(__file__))
+MODEL_FOLDER = os.path.join(PROJECT_FOLDER, "models/")
 ROBOT_NAME = "double_pendulum"
 NET_INPUT_SIZE = 4
 DO_PLOTS = False
@@ -28,7 +30,6 @@ def main():
 
     print("Create KinDynComputations object")
     joints_name_list = [s for s in robot.model.names[1:]]   
-    print(joints_name_list)
     nq = len(joints_name_list)                              # number of joints
     nx = 2*nq                                               # size of the state variable
     kinDyn = KinDynComputations(urdf, joints_name_list)

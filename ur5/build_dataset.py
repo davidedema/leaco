@@ -155,13 +155,13 @@ if __name__ == "__main__":
     tau_max = effort_limit.tolist()
 
     # Number of positive and negative cases
-    TOT_NEG = 1000
-    TOT_POS = 1000
+    TOT_NEG = 3000
+    TOT_POS = 3000
 
     # Initialize the DataFrame
     df = pd.DataFrame(columns=[f'Q0_{i + 1}' for i in range(nq)] + [f'DQ0_{i + 1}' for i in range(nq)] + ['Label'])
 
-    num_processes = 2  # Number of parallel processes
+    num_processes = 6  # Number of parallel processes
     num_cases_per_process = (TOT_NEG + TOT_POS) // num_processes
 
     print("Start creating dataset...")

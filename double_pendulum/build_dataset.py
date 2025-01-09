@@ -174,7 +174,7 @@ if __name__ == "__main__":
     df = pd.DataFrame(columns=['Q0_1', 'Q0_2', 'DQ0_1', 'DQ0_2', 'Label'])
 
     # Parallelization setup
-    num_processes = 2  # number of processes
+    num_processes = 6  # number of processes
     num_cases_per_process = (TOT_NEG + TOT_POS) // num_processes
 
     print(f"Creating dataset with {TOT_NEG} negative and {TOT_POS} positive cases.")

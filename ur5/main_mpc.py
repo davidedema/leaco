@@ -12,9 +12,12 @@ from robot_simulator import RobotSimulator
 from robot_wrapper import RobotWrapper 
 
 import torch
+import os
 from model import NeuralNet
 
-MODEL_FOLDER = "/home/student/shared/leaco/ur5/models/"
+PROJECT_FOLDER = os.path.dirname(os.path.abspath(__file__))
+MODEL_FOLDER = os.path.join(PROJECT_FOLDER, "models/")
+print(PROJECT_FOLDER)
 ROBOT_NAME = "ur5"
 NET_INPUT_SIZE = 12
 DO_PLOTS = False
