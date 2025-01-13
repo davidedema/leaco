@@ -43,10 +43,10 @@ def main():
     SOLVER_MAX_ITER = 3
     
     # MPC horizon
-    N = int(N_sim/10)
+    N = 15
     # enable terminal constraint = neural network output >= THRESHOLD_CLASSIFICATION
     USE_TERMINAL_CONSTRAINT = True
-    THRESHOLD_CLASSIFICATION = 0.75
+    THRESHOLD_CLASSIFICATION = 0.9
     
     qMin   = np.array([-np.pi,-np.pi])
     qMax   = -qMin
@@ -59,14 +59,14 @@ def main():
 
     dt = 0.010          # time step MPC
 
-    q0 = np.zeros(nq)   # initial joint configuration
+    q0 = np.array([np.pi/2,-np.pi/2])   # initial joint configuration
     dq0= np.zeros(nq)   # initial joint velocities
     
     qdes = qMax         # desired joint configuration, near the joint limits
     
     w_q = 1e2           # position weight
-    w_a = 1e-2          # acceleration weight
-    w_v = 1e-2          # velocity weight
+    w_a = 1e-4          # acceleration weight
+    w_v = 1e-4          # velocity weight
 
     # create the robot simulator
     r = RobotWrapper(robot.model, robot.collision_model, robot.visual_model)

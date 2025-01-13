@@ -41,14 +41,14 @@ def main():
 
     DO_WARM_START = True
     SOLVER_TOLERANCE = 1e-4
-    SOLVER_MAX_ITER = 3
+    SOLVER_MAX_ITER = 2
     
     # MPC horizon
-    N = int(N_sim/10)    
+    N = 15    
     CONTROL_BOUNDS_SCALING_FACTOR = 1
     # enable terminal constraint = neural network output >= THRESHOLD_CLASSIFICATION
-    USE_TERMINAL_CONSTRAINT = True
-    THRESHOLD_CLASSIFICATION = 0.65
+    USE_TERMINAL_CONSTRAINT = True   
+    THRESHOLD_CLASSIFICATION = 0.8
     
     
     SIMULATOR = "pinocchio"
@@ -64,14 +64,14 @@ def main():
 
     dt = 0.010          # time step MPC
 
-    q0 = np.zeros(nq)   # initial joint configuration
+    q0 = np.ones(nq)*0.5       # initial joint configuration
     dq0= np.zeros(nq)   # initial joint velocities
     
     qdes = qMin         # desired joint configuration, near the joint limits
 
     w_q = 1e2           # position weight
-    w_a = 1e-5          # acceleration weight
-    w_v = 1e-5          # velocity weight
+    w_a = 1e-6          # acceleration weight
+    w_v = 1e-6          # velocity weight
 
     
     # create the robot simulator
